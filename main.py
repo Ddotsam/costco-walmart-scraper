@@ -5,8 +5,9 @@ import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from time import time
-import pandas as pd
+from datetime import datetime
 from cloakbrowser import launch
+import pandas as pd
 
 from process_costco_html import extract_costco_products
 from process_walmart_html import extract_walmart_products
@@ -78,17 +79,17 @@ def main():
     products_to_scrape = ['honey', 'eggs', 'whole milk']
     dfs_list = []
 
-    # One executor per domain – each runs only ONE task at a time
+    output_dir = Path("~/documents/costco/python1/output").expanduser()
+    output_dir.mkdir(parents=True, exist_ok=True)
+
     with (
-        ThreadPoolExecutor(max_workers=1) as costco_executor
-        , ThreadPoolExecutor(max_workers=1) as walmart_executor
+        ThreadPoolExecutor(max_workers=1) as costco_executor,
+        ThreadPoolExecutor(max_workers=1) as walmart_executor,
     ):
         futures = []
-
         for product in products_to_scrape:
             costco_url = compose_costco_url(product)
             walmart_url = compose_walmart_url(product)
-
             futures.append(costco_executor.submit(fetch_and_extract, "costco", costco_url, product))
             futures.append(walmart_executor.submit(fetch_and_extract, "walmart", walmart_url, product))
 
@@ -99,12 +100,20 @@ def main():
                     dfs_list.append(df)
             except Exception as e:
                 print(f"A scrape task failed: {e}")
-
-        if not dfs_list:
-            return pd.DataFrame()
+    
+    if not dfs_list:
+        print("No data collected. Exiting without saving.")
+        return
 
     products_df = pd.concat(dfs_list, ignore_index=True)
-    return products_df
+    products_df = products_df.convert_dtypes()
+
+    today_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filename = f"products_{today_str}.parquet"
+    filepath = output_dir / filename
+
+    products_df.to_parquet(filepath, index=False, engine='pyarrow')
+    print(f"Saved {len(products_df)} products to {filepath}")
 
 if __name__ == "__main__":
     main()
