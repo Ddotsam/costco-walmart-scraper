@@ -68,7 +68,7 @@ def compose_costco_url(product_name):
 
 def main():
     # products_to_scrape = ['honey', 'eggs', 'whole milk']
-    products_to_scrape = ['yogurt']
+    products_to_scrape = ['lactose free milk']
     for product in products_to_scrape:
         walmart_url = compose_walmart_url(product)
         costco_url = compose_costco_url(product)
@@ -76,9 +76,6 @@ def main():
 
         costco_html = get_html(costco_url, product)
         df = extract_costco_products(costco_html)
-
-    
-
 
 if __name__ == "__main__":
     main()

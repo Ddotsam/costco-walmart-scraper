@@ -10,10 +10,12 @@ def extract_costco_products(html_string):
     soup = BeautifulSoup(html_string, 'html.parser')
 
     product_list_main = soup.find('div', attrs={'role': 'region', 'aria-label': re.compile(r'results for', re.IGNORECASE)})
-    product_cards_main = product_list_main.find_all('div', recursive=False)
+    if product_list_main:
+        product_cards_main = product_list_main.find_all('div', recursive=False)
 
     product_list_backup = soup.find('div', id='productList')
-    product_cards_backup = product_list_backup.find_all('div', attrs={'data-testid': re.compile(r'grid', re.IGNORECASE)})
+    if product_list_backup:
+        product_cards_backup = product_list_backup.find_all('div', attrs={'data-testid': re.compile(r'grid', re.IGNORECASE)})
 
     product_cards = product_cards_main if product_cards_main is not None else product_cards_backup
     
@@ -65,7 +67,7 @@ def extract_costco_products(html_string):
                             "Image_URL": img_url or None,
                             "Product_Link": product_link or None
                         })
-    else:
+    elif product_cards_backup:
         for card in product_cards_backup:
 
             # Find Title
@@ -99,6 +101,9 @@ def extract_costco_products(html_string):
                     "Image_URL": img_url or None,
                     "Product_Link": product_link or None
                 })
+    else: 
+        print("No product cards found in the HTML. The page layout might be different, or a bot wall appeared.")
+        return pd.DataFrame()  # Return an empty DataFrame if no products are found
             
     df = pd.DataFrame(extracted_data)
     return df
