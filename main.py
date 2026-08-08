@@ -1,6 +1,7 @@
 import json
 import random
 import re
+import asyncio
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -23,18 +24,25 @@ def compose_costco_url(product_name):
     return f"{base_url}{encoded_query}"
 
 def get_html(site_url, product_name):
+    # Clear any asyncio event loop that may have leaked into this thread.
+    # This prevents "Sync API inside the asyncio loop" errors.
+    try:
+        asyncio.set_event_loop(None)
+    except Exception:
+        pass  # ignore if already cleared
+
     browser = launch(headless=False, humanize=True)
     page = browser.new_page()
-    
+
     try:
         page.goto(site_url, wait_until="load")
-        
+
         if "walmart" in site_url:
             company = 'Walmart'
             wait_selector = '[data-item-id]'
         elif "costco" in site_url:
             company = 'Costco'
-            try:            
+            try:
                 guest_link = page.get_by_role("button", name=re.compile(r"guest", re.IGNORECASE))
                 guest_link.wait_for(state="visible", timeout=5000)
                 print("Found 'Continue as guest' link. Clicking it...")
@@ -45,12 +53,12 @@ def get_html(site_url, product_name):
             wait_selector = '#productList'
         else:
             wait_selector = 'body'
-            
+
         try:
             page.wait_for_selector(wait_selector, timeout=15000)
         except Exception as e:
             print(f"Timed out waiting for products. The page layout might be different, or a bot wall appeared. Error: {e}")
-        
+
         html_content = page.content()
 
         output_folder = Path("raw_html")
@@ -76,7 +84,7 @@ def fetch_and_extract(domain, url, product):
         raise ValueError(f"Unknown domain: {domain}")
 
 def main():
-    products_to_scrape = ['honey', 'eggs', 'whole milk']
+    products_to_scrape = ['diapers', 'mayonaise', 'ground beef']
     dfs_list = []
 
     output_dir = Path("~/documents/costco/python1/output").expanduser()
