@@ -8,8 +8,8 @@ from time import time
 import pandas as pd
 from cloakbrowser import launch
 
-from scrape_costco_html import extract_costco_products
-from scrape_walmart_html import extract_walmart_products
+from process_costco_html import extract_costco_products
+from process_walmart_html import extract_walmart_products
 
 def get_html(site_url, product_name):
     # Launch CloakBrowser with strict stealth rules
