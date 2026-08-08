@@ -60,13 +60,13 @@ def extract_costco_products(html_string):
                     product_link = f'https://sameday.costco.com{product_link_anchor["href"]}'
 
                 if title_text:
-                        extracted_data.append({
-                            "Store": "Costco",
-                            "Title": title_text,
-                            "Price": price or None,
-                            "Image_URL": img_url or None,
-                            "Product_Link": product_link or None
-                        })
+                    extracted_data.append({
+                        "Store": "Costco"
+                        , "Title": title_text
+                        , "Price": price or None
+                        , "Image_URL": img_url or None
+                        , "Product_Link": product_link or None
+                    })
     elif product_cards_backup:
         for card in product_cards_backup:
 
@@ -95,11 +95,11 @@ def extract_costco_products(html_string):
             
             if title_text:
                 extracted_data.append({
-                    "Store": "Costco",
-                    "Title": title_text,
-                    "Price": price or None,
-                    "Image_URL": img_url or None,
-                    "Product_Link": product_link or None
+                    "Store": "Costco"
+                    , "Title": title_text
+                    , "Price": price or None
+                    , "Image_URL": img_url or None
+                    , "Product_Link": product_link or None
                 })
     else: 
         print("No product cards found in the HTML. The page layout might be different, or a bot wall appeared.")

@@ -48,11 +48,11 @@ def extract_walmart_products(html_string):
         
         if title_text:
             extracted_data.append({
-                "Store": "Walmart",
-                "Title": title_text,
-                "Price": price,
-                "Image_URL": img_url,
-                "Product_Link": product_link
+                "Store": "Walmart"
+                , "Title": title_text
+                , "Price": price or None
+                , "Image_URL": img_url or None
+                , "Product_Link": product_link
             })
             
     df = pd.DataFrame(extracted_data)
