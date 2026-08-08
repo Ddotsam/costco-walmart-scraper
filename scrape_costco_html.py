@@ -23,39 +23,72 @@ def extract_costco_products(html_string):
     output_folder = Path("~/documents/costco/python1/output").expanduser()
     output_folder.mkdir(parents=True, exist_ok=True)
 
-    for card in product_cards:
+    if product_cards_main:
+        for card in product_cards_main:
+            if card.find('div', attrs={'data-testid': re.compile(r'display-ad', re.IGNORECASE)}):
+                continue
+            product_cards = card.find_all('div', attrs = {'aria-label': re.compile(r'product', re.IGNORECASE)})
+            if product_cards:
+                for product in product_cards:
 
-        # Find Title
-        title_div = card.find('h3', attrs={'id': re.compile(r'producttile', re.IGNORECASE)})
-        if title_div:
-            title_text = title_div.get_text(strip=True)
+                    # Find Title
+                    title_div = product.find('h3')
+                    if title_div:
+                        title_text = title_div.get_text(strip=True)
 
-        # Find Price
-        price_div = card.find('div', attrs={'data-testid': re.compile(r'text_price', re.IGNORECASE)})
-        if price_div: 
-            price_text = price_div.get_text(strip=True)
-            match = re.search(r'\$?([\d\.]+)', price_text)
-            price = float(match.group(1).replace(',', '')) if match else None
+                    # Find Price
+                    price_span = product.find('span', string=re.compile('current price', re.IGNORECASE))
+                    if price_span: 
+                        price_text = price_span.get_text(strip=True)
+                        match = re.search(r'\$?([\d\.]+)', price_text)
+                        price = float(match.group(1).replace(',', '')) if match else None
 
-        # Find Image URL
-        img_div = card.find('div', attrs={'data-testid': re.compile(r'productimage', re.IGNORECASE)})
-        if img_div:
-            img_tag = img_div.find('img')
-            img_url = img_tag['src'] if img_tag and 'src' in img_tag.attrs else None
+                    # Find Image URL
+                    img_tag = product.find('img', attrs={'data-testid': re.compile(r'item-card-image', re.IGNORECASE)})
+                    if img_tag:
+                        img_srcset = img_tag['srcset'] if 'srcset' in img_tag.attrs else None
+                        if img_srcset:
+                            entries = re.split(r',\s+', img_srcset.strip())
+                            img_url = entries[-1].split(' ')[0]
 
-        # Find Product Link
-        product_link_anchor = card.find('a', href=True, attrs={'data-testid': re.compile(r'link', re.IGNORECASE)})
-        if product_link_anchor:
-            product_link = product_link_anchor['href']
-        
-        if title_text:
-            extracted_data.append({
-                "Store": "Costco",
-                "Title": title_text,
-                "Price": price,
-                "Image_URL": img_url,
-                "Product_Link": product_link
-            })
+                    # Find Product Link
+                    product_link_anchor = card.find('a', href=True, role='button')
+                    if product_link_anchor:
+                        product_link = f'https://sameday.costco.com{product_link_anchor["href"]}'
+    else:
+        for card in product_cards_backup:
+
+            # Find Title
+            title_div = card.find('h3', attrs={'id': re.compile(r'producttile', re.IGNORECASE)})
+            if title_div:
+                title_text = title_div.get_text(strip=True)
+
+            # Find Price
+            price_div = card.find('div', attrs={'data-testid': re.compile(r'text_price', re.IGNORECASE)})
+            if price_div: 
+                price_text = price_div.get_text(strip=True)
+                match = re.search(r'\$?([\d\.]+)', price_text)
+                price = float(match.group(1).replace(',', '')) if match else None
+
+            # Find Image URL
+            img_div = card.find('div', attrs={'data-testid': re.compile(r'productimage', re.IGNORECASE)})
+            if img_div:
+                img_tag = img_div.find('img')
+                img_url = img_tag['src'] if img_tag and 'src' in img_tag.attrs else None
+
+            # Find Product Link
+            product_link_anchor = card.find('a', href=True, attrs={'data-testid': re.compile(r'link', re.IGNORECASE)})
+            if product_link_anchor:
+                product_link = product_link_anchor['href']
+            
+    if title_text:
+        extracted_data.append({
+            "Store": "Costco",
+            "Title": title_text,
+            "Price": price,
+            "Image_URL": img_url,
+            "Product_Link": product_link
+        })
             
     df = pd.DataFrame(extracted_data)
     return df
