@@ -4,3 +4,5 @@ __pychache__/
 raw_html/
 *.html
 sandbox.ipynb
+output/
+debug/
