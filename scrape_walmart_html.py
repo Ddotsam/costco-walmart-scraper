@@ -4,26 +4,20 @@ from cloakbrowser import launch
 from bs4 import BeautifulSoup
 from pathlib import Path
 
-output_folder = Path("~/documents/costco/python1/output").expanduser()
-
-output_folder.mkdir(parents=True, exist_ok=True)
-
 def extract_walmart_products(html_string):
+    """Parses raw Walmart HTML and returns a DataFrame with product details"""
+
     soup = BeautifulSoup(html_string, 'html.parser')
     
     product_list = soup.find('div', attrs={'data-testid': 'item-stack'})
     product_cards = product_list.find_all('div', recursive=False)
     
     extracted_data = []
-    card_number = 0
 
     output_folder = Path("~/documents/costco/python1/output").expanduser()
     output_folder.mkdir(parents=True, exist_ok=True)
 
     for card in product_cards:
-        file_path = output_folder / f"card_{card_number}.html"
-        with open(file_path, "w", encoding="utf-8") as file:
-            file.write(card.prettify())
 
         # Find Title
         title_div = card.find('h3', attrs={'data-automation-id': 'product-title'})
@@ -63,11 +57,3 @@ def extract_walmart_products(html_string):
             
     df = pd.DataFrame(extracted_data)
     return df
-
-if __name__ == "__main__":
-
-    with open("raw_html/walmart_eggs.html", "r", encoding="utf-8") as file:
-        file_contents = file.read()
-
-    df = extract_walmart_products(file_contents)
-    df.to_json(output_folder / "walmart_products.json", orient="records", indent=4)

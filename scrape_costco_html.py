@@ -1,20 +1,21 @@
-import time
-import json
 import re
 import pandas as pd
 from cloakbrowser import launch
 from bs4 import BeautifulSoup
 from pathlib import Path
 
-output_folder = Path("~/documents/costco/python1/output").expanduser()
-
-output_folder.mkdir(parents=True, exist_ok=True)
-
 def extract_costco_products(html_string):
+    """Parses raw Costco HTML and returns a DataFrame with product details"""
+
     soup = BeautifulSoup(html_string, 'html.parser')
-    
-    product_list = soup.find('div', id='productList')
-    product_cards = product_list.find_all('div', attrs={'data-testid': re.compile(r'grid', re.IGNORECASE)})
+
+    product_list_main = soup.find('div', attrs={'role': 'region', 'aria-label': re.compile(r'results for', re.IGNORECASE)})
+    product_cards_main = product_list_main.find_all('div', recursive=False)
+
+    product_list_backup = soup.find('div', id='productList')
+    product_cards_backup = product_list_backup.find_all('div', attrs={'data-testid': re.compile(r'grid', re.IGNORECASE)})
+
+    product_cards = product_cards_main if product_cards_main is not None else product_cards_backup
     
     extracted_data = []
     card_number = 0
@@ -23,9 +24,6 @@ def extract_costco_products(html_string):
     output_folder.mkdir(parents=True, exist_ok=True)
 
     for card in product_cards:
-        file_path = output_folder / f"card_{card_number}.html"
-        with open(file_path, "w", encoding="utf-8") as file:
-            file.write(card.prettify())
 
         # Find Title
         title_div = card.find('h3', attrs={'id': re.compile(r'producttile', re.IGNORECASE)})
@@ -61,11 +59,3 @@ def extract_costco_products(html_string):
             
     df = pd.DataFrame(extracted_data)
     return df
-
-if __name__ == "__main__":
-
-    with open("costco_html.html", "r", encoding="utf-8") as file:
-        file_contents = file.read()
-
-    df = extract_costco_products(file_contents)
-    df.to_json(output_folder / "costco_products.json", orient="records", indent=4)
