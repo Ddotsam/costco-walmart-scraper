@@ -1,3 +1,6 @@
 __pychache__/
 *.pyc
 *.pyo
+raw_html/
+*.html
+sandbox.ipynb

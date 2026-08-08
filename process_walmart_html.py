@@ -44,7 +44,7 @@ def extract_walmart_products(html_string):
         # Find Product Link
         product_link_anchor = card.find('a', href=True)
         if product_link_anchor:
-            product_link = product_link_anchor['href']
+            product_link = f"https://www.walmart.com{product_link_anchor['href']}"
         
         if title_text:
             extracted_data.append({
