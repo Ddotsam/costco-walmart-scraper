@@ -1,8 +1,8 @@
 import json
 import random
 import re
-import concurrent.futures
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from time import time
 import pandas as pd
@@ -11,9 +11,17 @@ from cloakbrowser import launch
 from process_costco_html import extract_costco_products
 from process_walmart_html import extract_walmart_products
 
+def compose_walmart_url(product_name):
+    base_url = "https://www.walmart.com/search?q="
+    encoded_query = product_name.replace(" ", "+")
+    return f"{base_url}{encoded_query}"
+
+def compose_costco_url(product_name):
+    base_url = "https://sameday.costco.com/store/costco/s?k="
+    encoded_query = product_name.replace(" ", "+")
+    return f"{base_url}{encoded_query}"
+
 def get_html(site_url, product_name):
-    # Launch CloakBrowser with strict stealth rules
-    # headless=False is safer for heavy bot walls, humanize=True mimics real mouse/scroll paths
     browser = launch(headless=False, humanize=True)
     page = browser.new_page()
     
@@ -56,26 +64,47 @@ def get_html(site_url, product_name):
 
     return html_content
 
-def compose_walmart_url(product_name):
-    base_url = "https://www.walmart.com/search?q="
-    encoded_query = product_name.replace(" ", "+")
-    return f"{base_url}{encoded_query}"
-
-def compose_costco_url(product_name):
-    base_url = "https://sameday.costco.com/store/costco/s?k="
-    encoded_query = product_name.replace(" ", "+")
-    return f"{base_url}{encoded_query}"
+def fetch_and_extract(domain, url, product):
+    """Fetch HTML and extract products, returning a DataFrame."""
+    html = get_html(url, product)
+    if domain == "costco":
+        return extract_costco_products(html)
+    elif domain == "walmart":
+        return extract_walmart_products(html)
+    else:
+        raise ValueError(f"Unknown domain: {domain}")
 
 def main():
-    # products_to_scrape = ['honey', 'eggs', 'whole milk']
-    products_to_scrape = ['lactose free milk']
-    for product in products_to_scrape:
-        walmart_url = compose_walmart_url(product)
-        costco_url = compose_costco_url(product)
+    products_to_scrape = ['honey', 'eggs', 'whole milk']
+    dfs_list = []
 
+    # One executor per domain – each runs only ONE task at a time
+    with (
+        ThreadPoolExecutor(max_workers=1) as costco_executor
+        , ThreadPoolExecutor(max_workers=1) as walmart_executor
+    ):
+        futures = []
 
-        costco_html = get_html(costco_url, product)
-        df = extract_costco_products(costco_html)
+        for product in products_to_scrape:
+            costco_url = compose_costco_url(product)
+            walmart_url = compose_walmart_url(product)
+
+            futures.append(costco_executor.submit(fetch_and_extract, "costco", costco_url, product))
+            futures.append(walmart_executor.submit(fetch_and_extract, "walmart", walmart_url, product))
+
+        for future in as_completed(futures):
+            try:
+                df = future.result()
+                if df is not None and not df.empty:
+                    dfs_list.append(df)
+            except Exception as e:
+                print(f"A scrape task failed: {e}")
+
+        if not dfs_list:
+            return pd.DataFrame()
+
+    products_df = pd.concat(dfs_list, ignore_index=True)
+    return products_df
 
 if __name__ == "__main__":
     main()
