@@ -1,6 +1,5 @@
 import re
 import pandas as pd
-from cloakbrowser import launch
 from bs4 import BeautifulSoup
 from pathlib import Path
 
