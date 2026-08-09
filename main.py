@@ -24,6 +24,7 @@ async def get_html_async(browser, site_url, product_name):
     company = "Unknown" 
 
     page = await browser.new_page()
+    await asyncio.sleep(random.uniform(0.5, 1.5))
     try:
         await page.goto(site_url, wait_until="load")
 
@@ -38,7 +39,7 @@ async def get_html_async(browser, site_url, product_name):
                 await guest_link.wait_for(state="visible", timeout=5000)
                 print("Found 'Continue as guest' link. Clicking it...")
                 await guest_link.click()
-                await asyncio.sleep(random.uniform(2, 4))
+                await asyncio.sleep(random.uniform(0.5, 1.5))
             except Exception:
                 print("No interstitial ad appeared. Proceeding to search...")
 
@@ -53,6 +54,7 @@ async def get_html_async(browser, site_url, product_name):
             if "costco" in site_url:
                 await page.evaluate("window.scrollBy(0, window.innerHeight)")
                 await page.wait_for_load_state("networkidle", timeout=15000)
+                await asyncio.sleep(random.uniform(0.5, 1.5))
         except Exception as e:
             print(f"Timed out waiting for products: {e}")
 
@@ -105,6 +107,8 @@ async def async_main(products_to_scrape):
                     dfs_list.append(df)
                 elif isinstance(df, Exception):
                     print(f"A scrape task failed: {df}")
+
+            await asyncio.sleep(random.uniform(3, 7))
 
     finally:
         await browser.close()
