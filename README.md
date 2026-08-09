@@ -33,7 +33,7 @@ source venv/bin/activate   # Linux/macOS
 # venv\Scripts\activate    # Windows
 
 # Install dependencies
-pip install -r requirements.txt   # if you have one, or manually:
+pip install -r requirements.txt
 
 # Install Playwright browsers
 playwright install chromium
