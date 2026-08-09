@@ -2,7 +2,7 @@
 
 Concurrently scrapes product data from **Costco Same‑Day** and **Walmart** for a given list of grocery items. Results are saved as a Parquet file, ready for analysis or upload to Databricks. The purpose of this is to figure out if the Costco membership actually saves you money by buying in bulk vs. buying products at a conventional grocery store, such as Walmart.
 
-Tl;dr: You spend more at Costco for the same products most of the time.
+Tl;dr: You spend more at Costco than you would at Walmart for the same products. Most of the time.
 
 ## Features
 
@@ -24,7 +24,7 @@ Tl;dr: You spend more at Costco for the same products most of the time.
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/grocery-price-scraper.git
+git clone https://github.com/ddotsam/grocery-price-scraper.git
 cd grocery-price-scraper
 
 # Create and activate a virtual environment (recommended)
