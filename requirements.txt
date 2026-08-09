@@ -1,4 +1,4 @@
-cloakbrowser
-pandas
-beautifulsoup4
-pyarrow
+beautifulsoup4==4.15.0
+cloakbrowser==0.5.6
+pandas==3.0.3
+pyarrow==23.0.1
