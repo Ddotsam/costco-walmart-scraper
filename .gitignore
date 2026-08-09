@@ -6,3 +6,7 @@ raw_html/
 sandbox.ipynb
 output/
 debug/
+.vscode/
+cheat_scrape.py
+costo_scraper.py
+instacart_graphql.py
